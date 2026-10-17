@@ -5,7 +5,7 @@ import (
 //	"fmt"
 	"log"
 	"net"
-
+	"strconv"
 	"strings"
 	"sync"
 	
@@ -44,6 +44,23 @@ func Handle(conn net.Conn, mp map[string]string,wg *sync.WaitGroup,mu *sync.Mute
 			mess:="deleted key: "+parts[1]+" with value: "+deleted_val+"\n"
 			conn.Write([]byte(mess))
 			rmu.RUnlock()
+		}
+		if parts[0]=="inc"{
+			mu.Lock()
+			conv_num , _ := strconv.ParseInt(mp[parts[1]],10,64)
+			var inc_by string
+			if len(parts)<3{
+				conv_num=conv_num+1
+				inc_by="1"
+			}else{
+				add_num,_ := strconv.ParseInt(parts[2],10,64)
+				conv_num=conv_num+ add_num
+				inc_by=parts[2]
+			}
+			mp[parts[1]]= strconv.FormatInt(conv_num,10);
+			mess:="key: "+parts[1]+" increased by "+inc_by+"\n"
+			conn.Write([]byte(mess))
+			mu.Unlock() 
 		}
     }
 }
