@@ -32,7 +32,13 @@ func Handle(conn net.Conn, mp map[string]string,wg *sync.WaitGroup,mu *sync.Mute
 			rmu.RLock()
 			log.Print("req is processing [get]")
 		//	time.Sleep(10*time.Second)
-			mess:="key: "+parts[1]+" value: "+mp[parts[1]]+"\n"
+			value , ok := mp[parts[1]]
+			var mess string
+			if ok{
+				mess="key: "+parts[1]+" value: "+value+"\n"
+			}else{
+				mess="key not found \n"
+			}
 			conn.Write([]byte(mess))
 			rmu.RUnlock()
 		}
