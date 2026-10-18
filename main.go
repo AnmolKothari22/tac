@@ -3,11 +3,11 @@ package main
 import (
 	
 	"fmt"
+	"flag"
 //	"log"
 	"net"
 	"os"
 	"os/signal"
-
 	"sync"
 	"syscall"
 	"tac/handle"
@@ -21,8 +21,10 @@ func main(){
 	var wg sync.WaitGroup
     var mu sync.Mutex
 	var rmu sync.RWMutex
-
-	lstr , err := net.Listen("tcp",":6379")
+	portPtr :=flag.String("port","6379","port where tac server has to run")
+	flag.Parse()
+	PORT :=":"+(*portPtr)
+	lstr , err := net.Listen("tcp",PORT)
 	if(err != nil){
 		fmt.Print("error occured: ",err,"\n")
 		return
