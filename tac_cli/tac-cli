@@ -1,0 +1,64 @@
+
+#!/bin/bash
+
+PORT=""
+MODE=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -port)
+            [[ $# -ge 2 ]] || { echo "Error: -port requires a value"; exit 1; }
+            PORT="$2"
+            shift 2
+            ;;
+        -wsl)
+            [[ -z "$MODE" ]] || { echo "Error: Use only one of -wsl or -win"; exit 1; }
+            MODE="wsl"
+            shift
+            ;;
+        -win)
+            [[ -z "$MODE" ]] || { echo "Error: Use only one of -wsl or -win"; exit 1; }
+            MODE="win"
+            shift
+            ;;
+        *)
+            echo "Usage: $0 -port <port> (-wsl | -win)"
+            exit 1
+            ;;
+    esac
+done
+
+# Validate required arguments
+if [[ -z "$PORT" || -z "$MODE" ]]; then
+    echo "Usage: $0 -port <port> (-wsl | -win)"
+    exit 1
+fi
+
+# Validate port number
+if ! [[ "$PORT" =~ ^[0-9]+$ ]] || (( PORT < 1 || PORT > 65535 )); then
+    echo "Error: Invalid port number"
+    exit 1
+fi
+
+# Set address based on mode
+if [[ "$MODE" == "wsl" ]]; then
+    addr="localhost"
+else
+    addr=$(ipconfig.exe | tr -d '\r' |
+        awk '/Wireless LAN adapter Wi-Fi:/ {wifi=1; next}
+             wifi && /adapter/ {wifi=0}
+             wifi && /IPv4 Address/ {
+                 sub(/^.*: /, "")
+                 print
+                 exit
+             }')
+
+    if [[ -z "$addr" ]]; then
+        echo "Error: Could not find Windows Wi-Fi IPv4 address"
+        exit 1
+    fi
+fi
+
+echo "Connecting to $addr:$PORT ..."
+rlwrap -S "tic-tac>> " nc "$addr" "$PORT"
+
