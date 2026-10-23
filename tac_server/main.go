@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"tac_server/handle"
+	"github.com/AnmolKothari22/tac/tac_server/handle"
 //	"time"
 )
 
@@ -55,3 +55,12 @@ func main(){
 
 
 }
+
+/*
+
+mkdir myapp && cd myapp
+go mod init github.com/AnmolKothari22/tac
+
+
+
+*/
