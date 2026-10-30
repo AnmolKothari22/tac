@@ -8,9 +8,11 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
-	
+
+	"github.com/AnmolKothari22/tac"
 	"github.com/AnmolKothari22/tac/tac_server/handle"
 	"github.com/AnmolKothari22/tac/tac_server/shards"
 	//	"time"
@@ -19,13 +21,13 @@ import (
 
 
 
-const mode=1;
+const mode=tac.Mode;
 
 func main(){
 	var wg sync.WaitGroup
 	//var rmu sync.RWMutex
 	//for running on any ports 
-	portPtr :=flag.String("port","6379","port where tac server has to run")
+	portPtr :=flag.String("port",strconv.Itoa(tac.PORT),"port where tac server has to run")
 	flag.Parse()
 	PORT :=":"+(*portPtr)
 	//starting server 
@@ -44,7 +46,7 @@ func main(){
     }()
 	//main map
 //	mp := make(map[string]string)
-	map_storage := make([]shards.Shard, shards.Shard_num())
+	map_storage := make([]shards.Shard, tac.Shard_count)
 	//initializing maps inside each struct
 	for i := range map_storage {
     	map_storage[i].Store = make(map[string]string)

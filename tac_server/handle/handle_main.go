@@ -7,12 +7,14 @@ import (
 	"net"
 	"strings"
 	"sync"
+
 	//"strconv"
 	//"io"
+	"github.com/AnmolKothari22/tac"
 	"github.com/AnmolKothari22/tac/tac_server/commands"
 	"github.com/AnmolKothari22/tac/tac_server/hasher"
-	"github.com/AnmolKothari22/tac/tac_server/shards"
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
+	"github.com/AnmolKothari22/tac/tac_server/shards"
 	//	"time"
 )
 
@@ -23,7 +25,7 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string){
 		//fmt.Print("stage 4");
 		parts[0]=strings.ToLower(parts[0])
 		//getting shard number
-		shard_no := hasher.ShardFor(parts[1],shards.Shard_num());
+		shard_no := hasher.ShardFor(parts[1],tac.Shard_count);
 		//fmt.Print("--",shard_no,"\n")
 		map_temp := &mp[shard_no];
 		if parts[0]=="set"{
