@@ -18,30 +18,48 @@ import (
 	//	"time"
 )
 
+func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
+	if len(parts) == 0 {
+		conn.Write([]byte(inputoutput.Write_RESP_ERR("empty command")))
+		return
+	}
 
-
-func handle_logic(conn net.Conn, mp []shards.Shard, parts []string){
-	//lowercasing first input
-		//fmt.Print("stage 4");
-		parts[0]=strings.ToLower(parts[0])
-		//getting shard number
-		shard_no := hasher.ShardFor(parts[1],config.Shard_count);
-		//fmt.Print("--",shard_no,"\n")
-		map_temp := &mp[shard_no];
-		if parts[0]=="set"{
-			commands.Handle_set(&map_temp.Rmu,parts,conn,&map_temp.Store);
-		}else if parts[0]=="get"{
-			commands.Handle_get(&map_temp.Rmu,parts,conn,&map_temp.Store);
-		}else if parts[0]=="del"{
-			commands.Handle_del(&map_temp.Rmu,parts,conn,&map_temp.Store);
-		}else if parts[0]=="inc"{
-			commands.Handle_inc(&map_temp.Rmu,parts,conn,&map_temp.Store);
-		}else if parts[0]=="dec"{
-			commands.Handle_dec(&map_temp.Rmu,parts,conn,&map_temp.Store);
-		}else{
-			conn.Write([]byte("write correct command\n"))
+	parts[0] = strings.ToLower(parts[0])
+	switch parts[0] {
+	case "set":
+		if len(parts) != 3 {
+			conn.Write([]byte(inputoutput.Write_RESP_ERR("wrong number of arguments for 'set' command")))
+			return
 		}
+	case "get", "del":
+		if len(parts) != 2 {
+			conn.Write([]byte(inputoutput.Write_RESP_ERR("wrong number of arguments for '" + parts[0] + "' command")))
+			return
+		}
+	case "inc", "dec":
+		if len(parts) < 2 || len(parts) > 3 {
+			conn.Write([]byte(inputoutput.Write_RESP_ERR("wrong number of arguments for '" + parts[0] + "' command")))
+			return
+		}
+	default:
+		conn.Write([]byte(inputoutput.Write_RESP_ERR("unknown command '" + parts[0] + "'")))
+		return
+	}
 
+	shardNo := hasher.ShardFor(parts[1], config.Shard_count)
+	mapTemp := &mp[shardNo]
+	switch parts[0] {
+	case "set":
+		commands.Handle_set(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+	case "get":
+		commands.Handle_get(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+	case "del":
+		commands.Handle_del(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+	case "inc":
+		commands.Handle_inc(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+	case "dec":
+		commands.Handle_dec(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+	}
 }
 
 func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,mode int) {
@@ -53,7 +71,7 @@ func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,mode int) {
 		reader := bufio.NewReader(conn)
 		//fmt.Print("stage 2");
 		for {
-    		parts, err := inputoutput.ReadRESP(reader)
+			parts, err := inputoutput.ReadRESP(reader)
     		if err != nil {
 				//log.Println("error 2: ",err);
         		break
