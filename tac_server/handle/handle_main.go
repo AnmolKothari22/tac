@@ -2,20 +2,19 @@ package handle
 
 import (
 	"bufio"
-	//"fmt"
-	//"log"
 	"net"
 	"strings"
 	"sync"
-
-	//"strconv"
-	//"io"
 	"github.com/AnmolKothari22/tac/config"
 	"github.com/AnmolKothari22/tac/tac_server/commands"
 	"github.com/AnmolKothari22/tac/tac_server/hasher"
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
 	"github.com/AnmolKothari22/tac/tac_server/shards"
-	//	"time"
+	//"time"
+	//"fmt"
+	//"log"
+	//"strconv"
+	//"io"
 )
 
 func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {

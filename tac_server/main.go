@@ -3,20 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
-
-	//	"log"
 	"net"
 	"os"
 	"os/signal"
 	"strconv"
 	"sync"
 	"syscall"
-
-	
 	"github.com/AnmolKothari22/tac/config"
 	"github.com/AnmolKothari22/tac/tac_server/handle"
 	"github.com/AnmolKothari22/tac/tac_server/shards"
-	//	"time"
+	//"time"
+	//"log"
 )
 
 
