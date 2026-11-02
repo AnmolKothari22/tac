@@ -47,10 +47,10 @@ jobs:
           sudo apt-get install -y redis-tools
 
       - name: Benchmark 100 clients
-        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 100 -n 100000 -t set,get -q
+        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 100 -n 100000 -t set,get
 
       - name: Benchmark 200 clients
-        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 200 -n 200000 -t set,get -q
+        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 200 -n 200000 -t set,get
 
       - name: Show server logs on failure
         if: failure()
