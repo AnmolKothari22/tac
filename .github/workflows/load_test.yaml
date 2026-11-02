@@ -1,0 +1,64 @@
+name: Redis Load Test
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build Redis server
+        run: go build -o tac-server ./tac_server
+
+      - name: Start Redis server
+        run: |
+          ./tac-server -port 6379 > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "$SERVER_PID" > server.pid
+
+      - name: Wait for server
+        run: |
+          for i in {1..50}; do
+            if (echo > /dev/tcp/127.0.0.1/6379) 2>/dev/null; then
+              echo "Server is ready!"
+              exit 0
+            fi
+            sleep 0.2
+          done
+
+          echo "Server failed to start"
+          cat server.log
+          exit 1
+
+      - name: Install redis-benchmark
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-tools
+
+      - name: Benchmark 100 clients
+        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 100 -n 100000 -t set,get -q
+
+      - name: Benchmark 200 clients
+        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 200 -n 200000 -t set,get -q
+
+      - name: Show server logs on failure
+        if: failure()
+        run: cat server.log || true
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill "$(cat server.pid)" || true
+          fi
