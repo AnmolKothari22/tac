@@ -47,17 +47,28 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
 
 	shardNo := hasher.ShardFor(parts[1], config.Shard_count)
 	mapTemp := &mp[shardNo]
+	var mess string
+	var typ inputoutput.WriteType
 	switch parts[0] {
 	case "set":
-		commands.Handle_set(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+		mess,typ=commands.Handle_set(&mapTemp.Rmu, parts, &mapTemp.Store)
 	case "get":
-		commands.Handle_get(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+		mess,typ=commands.Handle_get(&mapTemp.Rmu, parts, &mapTemp.Store)
 	case "del":
-		commands.Handle_del(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+		mess,typ=commands.Handle_del(&mapTemp.Rmu, parts, &mapTemp.Store)
 	case "inc":
-		commands.Handle_inc(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+		mess,typ=commands.Handle_inc(&mapTemp.Rmu, parts, &mapTemp.Store)
 	case "dec":
-		commands.Handle_dec(&mapTemp.Rmu, parts, conn, &mapTemp.Store)
+		mess,typ=commands.Handle_dec(&mapTemp.Rmu, parts, &mapTemp.Store)
+	}
+	if(typ==inputoutput.Normal){
+		conn.Write([]byte(inputoutput.Write_RESP_bulk(mess)))
+	}
+	if(typ==inputoutput.KeyMiss){
+		conn.Write([]byte(inputoutput.MissingKey()))
+	}
+	if(typ==inputoutput.Error){
+		conn.Write([]byte(inputoutput.Write_RESP_ERR(mess)))
 	}
 }
 
