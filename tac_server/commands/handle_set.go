@@ -2,14 +2,13 @@ package commands
 
 import (
 	//"fmt"
-	"net"
 	"sync"
 
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
 )
-func Handle_set(rmu *sync.RWMutex , parts []string,conn net.Conn,mp *map[string]string){
+func Handle_set(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string,inputoutput.WriteType){
 		rmu.Lock()	
 		(*mp)[parts[1]]=parts[2]
 		rmu.Unlock()
-		conn.Write([]byte(inputoutput.Write_RESP_bulk("OK")));
+		return "OK",inputoutput.Normal
 }

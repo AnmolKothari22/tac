@@ -1,17 +1,16 @@
 package commands
 import (
 	"sync"
-	"net"
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
 )
-func Handle_get(rmu *sync.RWMutex , parts []string,conn net.Conn,mp *map[string]string){
+func Handle_get(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string,inputoutput.WriteType){
 	rmu.RLock()
 	value , ok := (*mp)[parts[1]]
 	rmu.RUnlock()
 	var mess string = value;
 	if ok {
-    	conn.Write([]byte(inputoutput.Write_RESP_bulk(mess)))
+    	return mess,inputoutput.Normal
 	} else {
-    	conn.Write([]byte(inputoutput.MissingKey()))
+    	return mess,inputoutput.KeyMiss
 	}
 }
