@@ -5,6 +5,30 @@ import (
 	"math"
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
 )
+
+
+func can_it_inc(num_to_conv *int64,add *int64)bool{
+	if(*num_to_conv>0){
+		if(*add>0){
+			if((math.MaxInt64 - *num_to_conv)>=*add){
+				return true
+			}
+			return false
+		}
+		return true;
+	}else{
+		if(*add<0){
+			if((math.MinInt64 - *num_to_conv)<=*add){
+				return true
+			}
+			return false
+		}
+		return true;
+	}
+}
+
+
+
 func Handle_inc(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string,inputoutput.WriteType){
 	rmu.Lock()
 	defer rmu.Unlock()
@@ -29,24 +53,24 @@ func Handle_inc(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string
 	var inc_by string = "1"
 	if len(parts)>2{
 		inc_by=parts[2]
-		if len(inc_by)>19{ // if lenght of stringy number is greater then 20 , then its already out of bound!!
-			mess:="NAN or number out of bound(values should be <=INT64MAX )"
-			return mess,inputoutput.Error;
-		}
 	}
+
+	//converting number to be added to int
 	add_num,err := strconv.ParseInt(inc_by,10,64)
 	if err!=nil{                            //checking value correctness
-		mess:="increasing by a NAN not allowed"
-		return mess,inputoutput.Error;
-	}
-	if((math.MaxInt64 - conv_num)>=add_num){//int 64 out of bound checking 
-		conv_num=conv_num+add_num
-	}else{
-		mess:="value is going out of bound"
+		mess:="NAN not allowed/out of bound number"
 		return mess,inputoutput.Error;
 	}
 
-	(*mp)[parts[1]]= strconv.FormatInt(conv_num,10); 
-	mess:="key: "+parts[1]+" increased by "+inc_by
-	return mess, inputoutput.Normal
+	//checking for int64 bound and then returning
+	if(can_it_inc(&conv_num,&add_num)){
+		conv_num=conv_num+add_num
+		(*mp)[parts[1]]= strconv.FormatInt(conv_num,10); 
+		mess:="key: "+parts[1]+" increased by "+inc_by
+		return mess, inputoutput.Normal
+	}else{
+		mess:="value going out of bound "
+		return mess, inputoutput.Error
+	}
+
 }
