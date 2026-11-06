@@ -66,7 +66,7 @@ func Handle_dec(rmu *sync.RWMutex , parts []string,mp *map[string]string) (strin
 	if(can_it_dec(&conv_num,&sub_num)){
 		conv_num=conv_num-sub_num
 		(*mp)[parts[1]]= strconv.FormatInt(conv_num,10); 
-		mess:="key: "+parts[1]+" increased by "+dec_by
+		mess:="key: "+parts[1]+" decreased by "+dec_by
 		return mess, inputoutput.Normal
 	}else{
 		mess:="value going out of bound "
