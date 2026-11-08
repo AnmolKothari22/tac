@@ -5,8 +5,8 @@ import (
 )
 func Handle_get(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string,inputoutput.WriteType){
 	rmu.RLock()
+	defer rmu.RUnlock()
 	value , ok := (*mp)[parts[1]]
-	rmu.RUnlock()
 	var mess string = value;
 	if ok {
     	return mess,inputoutput.Normal
