@@ -8,7 +8,7 @@ import (
 )
 func Handle_set(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string,inputoutput.WriteType){
 		rmu.Lock()	
+		defer rmu.Unlock()
 		(*mp)[parts[1]]=parts[2]
-		rmu.Unlock()
 		return "OK",inputoutput.Normal
 }
