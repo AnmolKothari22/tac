@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"math"
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
+	"github.com/AnmolKothari22/tac/tac_server/shards"
 )
 
 
@@ -29,18 +30,28 @@ func can_it_inc(num_to_conv *int64,add *int64)bool{
 
 
 
-func Handle_inc(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string,inputoutput.WriteType){
+func Handle_inc(rmu *sync.RWMutex , parts []string,mp *map[string]shards.Stored_values)(string,inputoutput.WriteType){
 	rmu.Lock()
 	defer rmu.Unlock()
 
 	//checking key correctness
-	val , found := (*mp)[parts[1]];
+	comb , found := (*mp)[parts[1]];
 
 	//if key not found
 	if !found{
 		mess:="key not found"
 		return mess,inputoutput.KeyMiss ;
 	}
+
+	//checking if key is expired 
+	if comb.IsExpired(){//checking if exp is before current time
+		delete((*mp),parts[1])
+		mess:="Key expired"
+		return mess,inputoutput.KeyMiss;
+	}
+
+	//extracting value from key
+	val := comb.Value
 
 	//if value is NAN
 	conv_num , err := strconv.ParseInt(val,10,64)
@@ -65,7 +76,7 @@ func Handle_inc(rmu *sync.RWMutex , parts []string,mp *map[string]string)(string
 	//checking for int64 bound and then returning
 	if(can_it_inc(&conv_num,&add_num)){
 		conv_num=conv_num+add_num
-		(*mp)[parts[1]]= strconv.FormatInt(conv_num,10); 
+		(*mp)[parts[1]]= shards.Stored_values{Value:strconv.FormatInt(conv_num,10) , Created_at: comb.Created_at , Expire_after: comb.Expire_after } 
 		mess:="key: "+parts[1]+" increased by "+inc_by
 		return mess, inputoutput.Normal
 	}else{

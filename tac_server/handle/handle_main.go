@@ -26,9 +26,12 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
 	parts[0] = strings.ToLower(parts[0])
 	switch parts[0] {
 	case "set":
-		if len(parts) != 3 {
+		if (len(parts) != 3) && (len(parts)!= 5) {
 			conn.Write([]byte(inputoutput.Write_RESP_ERR("wrong number of arguments for 'set' command")))
 			return
+		}
+		if(len(parts)==5){
+			parts[4]=strings.ToLower(parts[4])
 		}
 	case "get", "del":
 		if len(parts) != 2 {

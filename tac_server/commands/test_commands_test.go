@@ -4,14 +4,16 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
+	"github.com/AnmolKothari22/tac/tac_server/shards"
 )
 
 func TestCommands(t *testing.T) {
 	tests := []struct {
 		name     string
-		command  func(*sync.RWMutex, []string, *map[string]string) (string, inputoutput.WriteType)
+		command  func(*sync.RWMutex, []string, *map[string]shards.Stored_values) (string, inputoutput.WriteType)
 		parts    []string
 		initial  map[string]string
 		wantMsg  string
@@ -118,9 +120,9 @@ func TestCommands(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lock := &sync.RWMutex{}
-			store := make(map[string]string, len(tt.initial))
+			store := make(map[string]shards.Stored_values, len(tt.initial))
 			for key, value := range tt.initial {
-				store[key] = value
+				store[key] = shards.Stored_values{Value:value ,Created_at: time.Now(),Expire_after: 0}
 			}
 
 			msg, typ := tt.command(lock, tt.parts, &store)
