@@ -47,7 +47,7 @@ func main(){
 	map_storage := make([]shards.Shard, config.Shard_count)
 	//initializing maps inside each struct
 	for i := range map_storage {
-    	map_storage[i].Store = make(map[string]string)
+    	map_storage[i].Store = make(map[string]shards.Stored_values)
 	}
 	for {
 		conn ,err2:= lstr.Accept()

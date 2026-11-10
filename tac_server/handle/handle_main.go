@@ -26,16 +26,19 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
 	parts[0] = strings.ToLower(parts[0])
 	switch parts[0] {
 	case "set":
-		if len(parts) != 3 {
+		if (len(parts) != 3) && (len(parts)!= 5) {
 			conn.Write([]byte(inputoutput.Write_RESP_ERR("wrong number of arguments for 'set' command")))
 			return
+		}
+		if(len(parts)==5){
+			parts[4]=strings.ToLower(parts[4])
 		}
 	case "get", "del":
 		if len(parts) != 2 {
 			conn.Write([]byte(inputoutput.Write_RESP_ERR("wrong number of arguments for '" + parts[0] + "' command")))
 			return
 		}
-	case "inc", "dec":
+	case "inc", "dec" , "ttl":
 		if len(parts) < 2 || len(parts) > 3 {
 			conn.Write([]byte(inputoutput.Write_RESP_ERR("wrong number of arguments for '" + parts[0] + "' command")))
 			return
@@ -60,6 +63,8 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
 		mess,typ=commands.Handle_inc(&mapTemp.Rmu, parts, &mapTemp.Store)
 	case "dec":
 		mess,typ=commands.Handle_dec(&mapTemp.Rmu, parts, &mapTemp.Store)
+	case "ttl":
+		mess,typ=commands.Handle_ttl(&mapTemp.Rmu, parts, &mapTemp.Store)
 	}
 	if(typ==inputoutput.Normal){
 		conn.Write([]byte(inputoutput.Write_RESP_bulk(mess)))
