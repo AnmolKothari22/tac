@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -122,7 +121,7 @@ func TestCommands(t *testing.T) {
 			lock := &sync.RWMutex{}
 			store := make(map[string]shards.Stored_values, len(tt.initial))
 			for key, value := range tt.initial {
-				store[key] = shards.Stored_values{Value:value ,Created_at: time.Now(),Expire_after: 0}
+				store[key] = shards.Stored_values{Value: value, Created_at: time.Now(), Expire_after: -1}
 			}
 
 			msg, typ := tt.command(lock, tt.parts, &store)
@@ -132,8 +131,18 @@ func TestCommands(t *testing.T) {
 			if typ != tt.wantType {
 				t.Errorf("type = %v, want %v", typ, tt.wantType)
 			}
-			if !reflect.DeepEqual(store, tt.wantMap) {
-				t.Errorf("store = %#v, want %#v", store, tt.wantMap)
+			if len(store) != len(tt.wantMap) {
+				t.Errorf("store has %d entries, want %d", len(store), len(tt.wantMap))
+			}
+			for key, wantValue := range tt.wantMap {
+				got, ok := store[key]
+				if !ok {
+					t.Errorf("store is missing key %q", key)
+					continue
+				}
+				if got.Value != wantValue {
+					t.Errorf("store[%q].Value = %q, want %q", key, got.Value, wantValue)
+				}
 			}
 		})
 	}
