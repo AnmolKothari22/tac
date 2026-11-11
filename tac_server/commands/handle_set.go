@@ -11,9 +11,9 @@ import (
 func Handle_set(rmu *sync.RWMutex , parts []string,mp *map[string]shards.Stored_values)(string,inputoutput.WriteType){
 		rmu.Lock()	
 		defer rmu.Unlock()
-		//(*mp)[parts[1]]=parts[2]
-		if len(parts)==3{
-			(*mp)[parts[1]]=shards.Stored_values{Value: parts[2] , Created_at: time.Now(),Expire_after: -1}
+
+		if len(parts)==3{ //non time bound set
+			(*mp)[parts[1]]=shards.Stored_values{Value: parts[2] , Created_at: time.Now(),Expire_after: -1} // in shards, expire_after <0 implies non  ttl set
 			return "OK",inputoutput.Normal
 		}else{
 			//duration extraction
@@ -22,9 +22,9 @@ func Handle_set(rmu *sync.RWMutex , parts []string,mp *map[string]shards.Stored_
 				mess:="invalid time duration"
 				return mess,inputoutput.Error
 			}
-			var conv_dur time.Duration
+			var conv_dur time.Duration // duration which is going to be converted to ms or s
 
-			switch parts[3]{
+			switch parts[3]{ // milliseconds or seconds , others lead to error
 			case "ms":
 				conv_dur =time.Duration(dur) * time.Millisecond
 			case "s":
