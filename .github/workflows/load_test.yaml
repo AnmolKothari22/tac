@@ -55,6 +55,9 @@ jobs:
       - name: Benchmark 200 clients
         run: redis-benchmark -h 127.0.0.1 -p 6379 -c 200 -n 200000 -t set,get
 
+      - name: Benchmark 300 clients
+        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 300 -n 200000 -t set,get
+
       - name: Show server logs on failure
         if: failure()
         run: cat server.log || true
