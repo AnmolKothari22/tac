@@ -1,6 +1,10 @@
 package client
 
+/*
+    TOTAL 6 COMMANDS(all) IN THIS
+*/
 
+//even if value is integer , convert it to string and then pass
 func (c *Client) Set(key, value string) error { //SET key value
     _, err := c.execute("SET", key, value)
     return err
