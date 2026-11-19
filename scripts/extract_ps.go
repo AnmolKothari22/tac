@@ -73,7 +73,14 @@ func extractResults(input io.Reader, output io.Writer, run, server string, clien
 }
 
 func parseBenchmarkOutput(input io.Reader) ([]benchmarkResult, error) {
-	scanner := bufio.NewScanner(input)
+	data, err := io.ReadAll(input)
+	if err != nil {
+		return nil, fmt.Errorf("read benchmark output: %w", err)
+	}
+	normalized := strings.ReplaceAll(string(data), "\r\n", "\n")
+	normalized = strings.ReplaceAll(normalized, "\r", "\n")
+
+	scanner := bufio.NewScanner(strings.NewReader(normalized))
 	scanner.Buffer(make([]byte, 4096), 1024*1024)
 
 	results := make([]benchmarkResult, 0, 2)

@@ -32,6 +32,9 @@ Summary:
         0.100     0.020     0.050     0.300     0.400     0.500
 `
 
+	output = "SET: rps=70000.0 (overall: 70000.0) avg_msec=1.000\r" +
+		"GET: rps=70000.0 (overall: 70000.0) avg_msec=1.000\r" +
+		strings.ReplaceAll(output, "\n", "\r")
 	results, err := parseBenchmarkOutput(strings.NewReader(output))
 	if err != nil {
 		t.Fatal(err)
