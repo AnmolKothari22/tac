@@ -68,10 +68,16 @@ jobs:
           mkdir -p benchmark-results/data_on_run benchmark-results/graphs
           for clients in 200 300; do
             file="benchmark-results/data_on_run/data_${clients}.csv"
+            expected_header="run,server,command,p50,p90,p99"
             if [ ! -s "$file" ]; then
-              echo "run,server,command,p50,p90,p99" > "$file"
+              printf '%s\n' "$expected_header" > "$file"
             fi
-            if [ "$(head -n 1 "$file")" != "run,server,command,p50,p90,p99" ]; then
+            last_byte="$(tail -c 1 "$file" | od -An -t x1 | tr -d '[:space:]')"
+            if [ "$last_byte" != "0a" ]; then
+              printf '\n' >> "$file"
+            fi
+            header="$(head -n 1 "$file" | tr -d '\r')"
+            if [ "$header" != "$expected_header" ]; then
               echo "Unexpected CSV header in $file" >&2
               exit 1
             fi
