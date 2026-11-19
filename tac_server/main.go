@@ -66,9 +66,8 @@ func main(){
 
 /*
 
-mkdir myapp && cd myapp
-go mod init github.com/AnmolKothari22/tac
 
 
+okk just test
 
 */
