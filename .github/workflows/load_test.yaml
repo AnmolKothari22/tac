@@ -2,12 +2,17 @@ name: Redis Load Test
 
 on:
   push:
+    branches:
+      - main
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   load-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -18,53 +23,105 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Build Redis server
+      - name: Build TAC
         run: go build -o tac-server ./tac_server
 
-      - name: Start Redis server
+      - name: Install Redis
         run: |
-          ./tac-server -port 6379 > server.log 2>&1 &
-          SERVER_PID=$!
-          echo "$SERVER_PID" > server.pid
+          sudo apt-get update
+          sudo apt-get install -y redis-server redis-tools
+          sudo service redis-server stop || true
 
-      - name: Wait for server
+      - name: Start Redis and TAC servers
         run: |
+          redis-server --port 6379 --save "" --appendonly no --daemonize yes \
+            --pidfile /tmp/redis-server.pid --logfile /tmp/redis-server.log
+          ./tac-server -port 6380 > tac-server.log 2>&1 &
+          echo "$!" > tac-server.pid
           for i in {1..50}; do
-            if (echo > /dev/tcp/127.0.0.1/6379) 2>/dev/null; then
-              echo "Server is ready!"
+            if redis-cli -h 127.0.0.1 -p 6379 ping >/dev/null 2>&1 \
+              && (echo > /dev/tcp/127.0.0.1/6380) 2>/dev/null; then
+              echo "Redis and TAC are ready"
               exit 0
             fi
             sleep 0.2
           done
-
-          echo "Server failed to start"
-          cat server.log
+          echo "A server failed to start"
+          cat /tmp/redis-server.log
+          cat tac-server.log
           exit 1
 
-      - name: Install redis-benchmark
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y redis-tools
-      
       - name: Run tests with race detector
         run: go test -race ./...
 
-      - name: Benchmark 100 clients
-        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 100 -n 100000 -t set,get
+      - name: Checkout benchmark results
+        uses: actions/checkout@v4
+        with:
+          ref: bench
+          path: benchmark-results
 
-      - name: Benchmark 200 clients
-        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 200 -n 200000 -t set,get
+      - name: Build benchmark tools
+        run: go build -o benchmark-tools ./benchmark-results/scripts
 
-      - name: Benchmark 300 clients
-        run: redis-benchmark -h 127.0.0.1 -p 6379 -c 300 -n 200000 -t set,get
+      - name: Initialize benchmark CSV files
+        run: |
+          mkdir -p benchmark-results/data_on_run benchmark-results/graphs
+          for clients in 200 300; do
+            file="benchmark-results/data_on_run/data_${clients}.csv"
+            if [ ! -s "$file" ]; then
+              echo "run,server,command,p50,p90,p99" > "$file"
+            fi
+            if [ "$(head -n 1 "$file")" != "run,server,command,p50,p90,p99" ]; then
+              echo "Unexpected CSV header in $file" >&2
+              exit 1
+            fi
+          done
+
+      - name: Benchmark Redis and TAC
+        run: |
+          set -euo pipefail
+          for clients in 200 300; do
+            file="benchmark-results/data_on_run/data_${clients}.csv"
+            redis_output="/tmp/redis_${clients}.txt"
+            tac_output="/tmp/tac_${clients}.txt"
+            run_id="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+            redis-benchmark -h 127.0.0.1 -p 6379 -c "$clients" -n 200000 -t set,get \
+              | tee "$redis_output"
+            ./benchmark-tools extract -run "$run_id" -server redis -client "$clients" \
+              < "$redis_output" >> "$file"
+
+            redis-benchmark -h 127.0.0.1 -p 6380 -c "$clients" -n 200000 -t set,get \
+              | tee "$tac_output"
+            ./benchmark-tools extract -run "$run_id" -server tac -client "$clients" \
+              < "$tac_output" >> "$file"
+          done
+
+      - name: Generate benchmark graphs
+        run: ./benchmark-tools graph -data-dir benchmark-results/data_on_run -output-dir benchmark-results/graphs
 
       - name: Show server logs on failure
         if: failure()
-        run: cat server.log || true
+        run: |
+          cat /tmp/redis-server.log || true
+          cat tac-server.log || true
+
+      - name: Save benchmark results
+        run: |
+          git -C benchmark-results config user.name "github-actions[bot]"
+          git -C benchmark-results config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C benchmark-results add data_on_run/data_200.csv data_on_run/data_300.csv graphs
+          if git -C benchmark-results diff --cached --quiet; then
+            echo "No benchmark results changed"
+            exit 0
+          fi
+          git -C benchmark-results commit -m "Update benchmark results for run ${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git -C benchmark-results push origin HEAD:bench
 
       - name: Stop server
         if: always()
         run: |
-          if [ -f server.pid ]; then
-            kill "$(cat server.pid)" || true
+          if [ -f tac-server.pid ]; then
+            kill "$(cat tac-server.pid)" || true
           fi
+          redis-cli -h 127.0.0.1 -p 6379 shutdown nosave || true
