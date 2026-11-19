@@ -86,12 +86,12 @@ jobs:
             tac_output="/tmp/tac_${clients}.txt"
             run_id="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
-            redis-benchmark -h 127.0.0.1 -p 6379 -c "$clients" -n 200000 -t set,get \
+            redis-benchmark -h 127.0.0.1 -p 6379 -c "$clients" -n 200000 -t set,get 2>&1 \
               | tee "$redis_output"
             ./benchmark-tools extract -run "$run_id" -server redis -client "$clients" \
               < "$redis_output" >> "$file"
 
-            redis-benchmark -h 127.0.0.1 -p 6380 -c "$clients" -n 200000 -t set,get \
+            redis-benchmark -h 127.0.0.1 -p 6380 -c "$clients" -n 200000 -t set,get 2>&1 \
               | tee "$tac_output"
             ./benchmark-tools extract -run "$run_id" -server tac -client "$clients" \
               < "$tac_output" >> "$file"
