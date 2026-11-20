@@ -52,6 +52,17 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
 	mapTemp := &mp[shardNo]
 	var mess string
 	var typ inputoutput.WriteType
+
+	/*
+		----IMPORTANT----
+
+		while adding new command , DONT forget 
+		to add it in tac_client also , otherwise 
+		it wont be comaptible in client
+
+		----*********----
+	*/
+	
 	switch parts[0] {
 	case "set":
 		mess,typ=commands.Handle_set(&mapTemp.Rmu, parts, &mapTemp.Store)
