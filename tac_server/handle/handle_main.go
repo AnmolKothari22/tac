@@ -5,11 +5,13 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"log"
 	"github.com/AnmolKothari22/tac/config"
 	"github.com/AnmolKothari22/tac/tac_server/commands"
 	"github.com/AnmolKothari22/tac/tac_server/hasher"
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
 	"github.com/AnmolKothari22/tac/tac_server/shards"
+	
 	//"time"
 	//"fmt"
 	//"log"
@@ -17,7 +19,7 @@ import (
 	//"io"
 )
 
-func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
+func handle_logic(conn net.Conn, mp []shards.Shard, parts []string ) {
 	if len(parts) == 0 {
 		conn.Write([]byte(inputoutput.Write_RESP_ERR("empty command")))
 		return
@@ -88,7 +90,7 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string) {
 	}
 }
 
-func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,mode int) {
+func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,loger *log.Logger,mode int ) {
 	defer conn.Close()
 	defer wg.Done()
 	//fmt.Print("stage 1");
@@ -103,6 +105,7 @@ func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,mode int) {
         		break
     		}	
 			//fmt.Print("stage 3");
+			go loger.Print(parts)
 			handle_logic(conn,mp,parts);
     	}
 	}
@@ -111,6 +114,7 @@ func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,mode int) {
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
         	parts := strings.Fields(scanner.Text())
+			go loger.Print(parts)
 			handle_logic(conn,mp,parts);
 		}
 	}

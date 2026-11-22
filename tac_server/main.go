@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
 	"strconv"
 	"sync"
 	"syscall"
+
 	"github.com/AnmolKothari22/tac/config"
 	"github.com/AnmolKothari22/tac/tac_server/handle"
 	"github.com/AnmolKothari22/tac/tac_server/shards"
@@ -35,6 +37,20 @@ func main(){
 		return
 	}
 
+
+	//logger created
+	 file, err := os.OpenFile(
+        "./log_handler/logs/serverL.log",
+        os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+        0666,
+    )
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
+	loger := log.New(file, "SERVER: ", log.LstdFlags)
+
+
 	//graceful shutdown 
 	sig := make(chan os.Signal, 1)
     signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
@@ -56,7 +72,7 @@ func main(){
 			break
 		}
 		wg.Add(1)
-		go handle.Handle(conn,map_storage,&wg,mode)
+		go handle.Handle(conn,map_storage,&wg,loger,mode)
 	}
 	wg.Wait()
 	fmt.Println("server close");
