@@ -37,7 +37,11 @@ func main(){
 		return
 	}
 
-
+	// Create the logger directory if it is missing
+	if err := os.MkdirAll("./tac_server/log_handler/logs", 0755); err != nil {
+    	panic(err)
+	}
+	
 	//logger created
 	 file, err := os.OpenFile(
         "./tac_server/log_handler/logs/serverL.log",
