@@ -1,0 +1,2 @@
+tac_server/log_handler/logs/*
+!tac_server/log_handler/logs/.gitkeep
