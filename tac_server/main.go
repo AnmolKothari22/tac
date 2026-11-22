@@ -40,7 +40,7 @@ func main(){
 
 	//logger created
 	 file, err := os.OpenFile(
-        "./log_handler/logs/serverL.log",
+        "./tac_server/log_handler/logs/serverL.log",
         os.O_APPEND|os.O_CREATE|os.O_WRONLY,
         0666,
     )
