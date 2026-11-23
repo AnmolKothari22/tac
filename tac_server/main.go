@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	//"log"
 	"net"
 	"os"
 	"os/signal"
@@ -14,6 +14,7 @@ import (
 	"github.com/AnmolKothari22/tac/config"
 	"github.com/AnmolKothari22/tac/tac_server/handle"
 	"github.com/AnmolKothari22/tac/tac_server/shards"
+	"github.com/AnmolKothari22/tac/tac_server/log_handler"
 	//"time"
 	//"log"
 )
@@ -37,24 +38,12 @@ func main(){
 		return
 	}
 
-	// Create the logger directory if it is missing
-	if err := os.MkdirAll("./tac_server/log_handler/logs", 0755); err != nil {
-    	panic(err)
-	}
-	
 	//logger created
-	 file, err := os.OpenFile(
-        "./tac_server/log_handler/logs/serverL.log",
-        os.O_APPEND|os.O_CREATE|os.O_WRONLY,
-        0666,
-    )
-    if err != nil {
-        panic(err)
-    }
-    defer file.Close()
-	loger := log.New(file, "SERVER: ", log.LstdFlags)
-
-
+	logger ,err :=logg.CreateLogger("./tac_server/log_handler/logs/ServerInfo.log")
+	defer logger.Close()
+	logger.WriteString("STARTING SERVER...")
+	logger.WriteString(`Server started at `,PORT)
+	
 	//graceful shutdown 
 	sig := make(chan os.Signal, 1)
     signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
@@ -76,7 +65,7 @@ func main(){
 			break
 		}
 		wg.Add(1)
-		go handle.Handle(conn,map_storage,&wg,loger,mode)
+		go handle.Handle(conn,map_storage,&wg,logger,mode)
 	}
 	wg.Wait()
 	fmt.Println("server close");
@@ -86,7 +75,7 @@ func main(){
 
 /*
 
-
+loger_server := logg.Create_Log("")
 
 okk just test
 test2

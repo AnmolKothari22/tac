@@ -5,13 +5,12 @@ import (
 	"net"
 	"strings"
 	"sync"
-	"log"
 	"github.com/AnmolKothari22/tac/config"
 	"github.com/AnmolKothari22/tac/tac_server/commands"
 	"github.com/AnmolKothari22/tac/tac_server/hasher"
 	"github.com/AnmolKothari22/tac/tac_server/input_output"
 	"github.com/AnmolKothari22/tac/tac_server/shards"
-	
+	"github.com/AnmolKothari22/tac/tac_server/log_handler"
 	//"time"
 	//"fmt"
 	//"log"
@@ -90,7 +89,7 @@ func handle_logic(conn net.Conn, mp []shards.Shard, parts []string ) {
 	}
 }
 
-func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,loger *log.Logger,mode int ) {
+func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,logger *logg.LogFile,mode int ) {
 	defer conn.Close()
 	defer wg.Done()
 	//fmt.Print("stage 1");
@@ -105,7 +104,7 @@ func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,loger *log.Logge
         		break
     		}	
 			//fmt.Print("stage 3");
-			go loger.Print(parts)
+			go logger.WriteStringArray(parts)
 			handle_logic(conn,mp,parts);
     	}
 	}
@@ -114,7 +113,7 @@ func Handle(conn net.Conn, mp []shards.Shard,wg *sync.WaitGroup,loger *log.Logge
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
         	parts := strings.Fields(scanner.Text())
-			go loger.Print(parts)
+			go logger.WriteStringArray(parts)
 			handle_logic(conn,mp,parts);
 		}
 	}
